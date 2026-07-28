@@ -18,24 +18,34 @@ jobs:
 
       - name: Setup Android SDK
         run: |
+          export ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
           echo "ANDROID_HOME=$ANDROID_HOME"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          if [ ! -d "$ANDROID_HOME/platforms/android-34" ]; then
-            echo "Installing SDK 34..."
-            SDKMANAGER=$(find $ANDROID_HOME -name "sdkmanager" -type f 2>/dev/null | head -1)
-            yes | $SDKMANAGER --sdk_root=$ANDROID_HOME "platforms;android-34" "build-tools;34.0.0"
-          else
-            echo "SDK 34 already installed"
-          fi
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          # Find sdkmanager
+          SDKMGR=$(find $ANDROID_HOME -name sdkmanager -type f 2>/dev/null | head -1)
+          echo "Found sdkmanager: $SDKMGR"
+          # Accept licenses
+          yes | $SDKMGR --sdk_root=$ANDROID_HOME --licenses 2>&1 || true
+          # List installed
+          $SDKMGR --sdk_root=$ANDROID_HOME --list 2>&1 | grep -E "platforms|build-tools" || true
+          # Install API 34
+          $SDKMGR --sdk_root=$ANDROID_HOME "platforms;android-34" "build-tools;34.0.0" 2>&1
+          # Verify
+          ls -la $ANDROID_HOME/platforms/android-34/ || echo "SDK 34 NOT FOUND"
 
-      - uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.5'
+      - name: Setup Gradle 8.5
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          echo "$PWD/gradle-8.5/bin" >> $GITHUB_PATH
+          $PWD/gradle-8.5/bin/gradle --version
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace --info 2>&1 | tail -200
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
