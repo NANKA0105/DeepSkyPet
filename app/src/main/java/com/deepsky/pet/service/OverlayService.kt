@@ -75,7 +75,7 @@ class OverlayService : Service() {
         }
         usageTracker.start()
 
-        screenshotObserver = ScreenshotObserver(this) {
+        screenshotObserver = ScreenshotObserver {
             mainHandler.post {
                 overlayView?.evaluateJavascript(
                     "window.petEngine && window.petEngine.onScreenshot()", null
@@ -140,7 +140,7 @@ class OverlayService : Service() {
                 cacheMode = WebSettings.LOAD_DEFAULT
                 // Fix: set transparent background before load
             }
-            isOpaque = false
+            setBackgroundColor(0x00000000)
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
