@@ -7,6 +7,10 @@ android {
     namespace = "com.deepsky.pet"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.deepsky.pet"
         minSdk = 26
