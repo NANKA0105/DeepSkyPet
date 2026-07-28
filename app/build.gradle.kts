@@ -18,13 +18,16 @@ android {
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ua3ZzYm90cnRsZHR6ZWd0YmtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MjYzNzQsImV4cCI6MjA5ODIwMjM3NH0.OprrmRa-E9GyqWQ4GAPBB4r0F069XUo-2U6YLehJxZM\"")
     }
 
+    signingConfigs {
+        create("release") {
+            // In CI: decode from secrets. Local: use your own keystore.
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-        debug {
-            isMinifyEnabled = false
         }
     }
 

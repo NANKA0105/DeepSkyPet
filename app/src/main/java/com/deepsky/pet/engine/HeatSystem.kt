@@ -1,6 +1,7 @@
 package com.deepsky.pet.engine
 
 import android.os.Handler
+import android.os.Looper
 
 class HeatSystem(
     private val mainHandler: Handler,
@@ -12,7 +13,7 @@ class HeatSystem(
             if (heat > 0) {
                 heat = maxOf(0, heat - 1)
                 onHeatChanged(heat)
-                mainHandler.postDelayed(this, 30_000L)
+                mainHandler.postDelayed(this, 30_000L) // decay every 30s
             }
         }
     }
@@ -20,6 +21,7 @@ class HeatSystem(
     fun addHeat(amount: Int) {
         heat = minOf(100, heat + amount)
         onHeatChanged(heat)
+        // Restart decay timer
         mainHandler.removeCallbacks(decayRunnable)
         mainHandler.postDelayed(decayRunnable, 30_000L)
     }

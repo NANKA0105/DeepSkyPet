@@ -23,9 +23,13 @@ class BatteryMonitor(
 
             if (plugged != lastPlugged) {
                 lastPlugged = plugged
-                if (plugged > 0) onBatteryEvent("charging", pct)
-                else onBatteryEvent("unplugged", pct)
+                if (plugged > 0) {
+                    onBatteryEvent("charging", pct)
+                } else {
+                    onBatteryEvent("unplugged", pct)
+                }
             }
+
             if (pct != lastLevel && pct <= 15) {
                 onBatteryEvent("low_battery", pct)
             }
@@ -34,7 +38,9 @@ class BatteryMonitor(
     }
 
     fun start() {
-        val filter = IntentFilter().apply { addAction(Intent.ACTION_BATTERY_CHANGED) }
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_BATTERY_CHANGED)
+        }
         context.registerReceiver(receiver, filter)
     }
 

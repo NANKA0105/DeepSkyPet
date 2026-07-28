@@ -19,8 +19,10 @@ class UsageTracker(
             override fun run() {
                 val current = getForegroundApp()
                 if (current.isNotEmpty() && current != lastApp) {
+                    // Report previous app duration
                     if (lastApp.isNotEmpty()) {
                         val duration = (System.currentTimeMillis() - lastAppStartTime) / 1000
+                        // Could log duration to backend
                     }
                     lastApp = current
                     lastAppStartTime = System.currentTimeMillis()
@@ -31,7 +33,8 @@ class UsageTracker(
     }
 
     private fun getForegroundApp(): String {
-        val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return ""
+        val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
+            ?: return ""
         val now = System.currentTimeMillis()
         val events = usm.queryEvents(now - 5000, now)
         val event = UsageEvents.Event()

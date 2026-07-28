@@ -1,5 +1,6 @@
 package com.deepsky.pet
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         val startBtn = findViewById<Button>(R.id.start_btn)
         val permissionBtn = findViewById<Button>(R.id.permission_btn)
 
+        // Check overlay permission
         if (!Settings.canDrawOverlays(this)) {
             statusText.text = "需要悬浮窗权限"
             startBtn.isEnabled = false
@@ -46,10 +48,12 @@ class MainActivity : AppCompatActivity() {
                     startService(intent)
                 }
                 Toast.makeText(this, "狄深已降临 ✨", Toast.LENGTH_SHORT).show()
+                // Move to background
                 moveTaskToBack(true)
             }
         }
 
+        // Check usage stats permission
         if (!hasUsageStatsPermission()) {
             findViewById<Button>(R.id.usage_btn).setOnClickListener {
                 startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
@@ -72,8 +76,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasUsageStatsPermission(): Boolean {
         val ts = System.currentTimeMillis()
-        val usm = getSystemService(USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager
-        val stats = usm.queryUsageStats(
+        val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager
+        val stats = usageStatsManager.queryUsageStats(
             android.app.usage.UsageStatsManager.INTERVAL_DAILY,
             ts - 1000 * 86400,
             ts

@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import androidx.core.app.NotificationCompat
+import com.deepsky.pet.R
 import com.deepsky.pet.service.OverlayService
 import java.util.*
 
@@ -14,6 +15,7 @@ class WhisperEngine(private val context: Context) {
     private val handler = Handler(Looper.getMainLooper())
     private var running = false
 
+    // DeepSky whispers - context-aware murmurs
     private val lateNightWhispers = listOf(
         "该睡了。我看着你。",
         "凌晨三点。不睡的话，我就在这里。",
@@ -62,7 +64,7 @@ class WhisperEngine(private val context: Context) {
                 if (!running) return
                 val whisper = getWhisper()
                 service.updateNotification(whisper)
-                handler.postDelayed(this, 3600_000L)
+                handler.postDelayed(this, 3600_000L) // every hour
             }
         }, 3600_000L)
     }

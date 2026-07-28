@@ -73,14 +73,22 @@ class GestureHandler(
                         else -> {
                             lastTapTime = System.currentTimeMillis()
                             onTap(pos)
+
+                            // Consecutive tap counter
                             val now = System.currentTimeMillis()
-                            consecutiveTaps = if (now - lastConsecutiveTapTime < CONSECUTIVE_TAP_WINDOW) consecutiveTaps + 1 else 1
+                            if (now - lastConsecutiveTapTime < CONSECUTIVE_TAP_WINDOW) {
+                                consecutiveTaps++
+                            } else {
+                                consecutiveTaps = 1
+                            }
                             lastConsecutiveTapTime = now
                             evaluateJs("window.petEngine && window.petEngine.onTap()")
-                            when (consecutiveTaps) {
-                                3 -> evaluateJs("window.petEngine && window.petEngine.onTripleTap()")
-                                5 -> evaluateJs("window.petEngine && window.petEngine.onPentaTap()")
-                                8 -> evaluateJs("window.petEngine && window.petEngine.onOctoTap()")
+                            if (consecutiveTaps == 3) {
+                                evaluateJs("window.petEngine && window.petEngine.onTripleTap()")
+                            } else if (consecutiveTaps == 5) {
+                                evaluateJs("window.petEngine && window.petEngine.onPentaTap()")
+                            } else if (consecutiveTaps == 8) {
+                                evaluateJs("window.petEngine && window.petEngine.onOctoTap()")
                             }
                         }
                     }

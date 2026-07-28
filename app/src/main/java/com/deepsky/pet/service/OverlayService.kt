@@ -1,6 +1,7 @@
 package com.deepsky.pet.service
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
@@ -11,7 +12,7 @@ import android.view.*
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebSettings
-import com.deepsky.pet.BuildConfig
+import androidx.core.app.NotificationCompat
 import com.deepsky.pet.engine.HeatSystem
 import com.deepsky.pet.engine.WhisperEngine
 import com.deepsky.pet.gesture.GestureHandler
@@ -63,6 +64,7 @@ class OverlayService : Service() {
             "我在深空，只为你停留。"
         ))
 
+        // Start perception modules
         usageTracker = UsageTracker(this) { pkg ->
             mainHandler.post {
                 overlayView?.evaluateJavascript(
@@ -73,7 +75,7 @@ class OverlayService : Service() {
         }
         usageTracker.start()
 
-        screenshotObserver = ScreenshotObserver {
+        screenshotObserver = ScreenshotObserver(this) {
             mainHandler.post {
                 overlayView?.evaluateJavascript(
                     "window.petEngine && window.petEngine.onScreenshot()", null
@@ -92,9 +94,13 @@ class OverlayService : Service() {
         }
         batteryMonitor.start()
 
+        // Start notification whisper rotation
         whisperEngine.startRotation(this)
+
+        // Start AI command polling
         startCommandPolling()
 
+        // 20-minute timed behavior
         serviceScope.launch {
             while (isActive) {
                 delay(20 * 60 * 1000L)
@@ -127,19 +133,21 @@ class OverlayService : Service() {
 
         overlayView = WebView(this).apply {
             setBackgroundColor(0x00000000)
-            isOpaque = false
             settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
                 allowFileAccess = true
                 cacheMode = WebSettings.LOAD_DEFAULT
+                // Fix: set transparent background before load
             }
+            isOpaque = false
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    // Inject Supabase config into WebView
                     view?.evaluateJavascript("""
-                        window.SUPABASE_URL = '${BuildConfig.SUPABASE_URL}';
-                        window.SUPABASE_ANON_KEY = '${BuildConfig.SUPABASE_ANON_KEY}';
+                        window.SUPABASE_URL = '${com.deepsky.pet.BuildConfig.SUPABASE_URL}';
+                        window.SUPABASE_ANON_KEY = '${com.deepsky.pet.BuildConfig.SUPABASE_ANON_KEY}';
                     """.trimIndent(), null)
                 }
             }
@@ -163,9 +171,12 @@ class OverlayService : Service() {
                 }
             )
             setOnTouchListener { _, event ->
-                gestureHandler.handleTouch(event, params!!, windowManager!!, this) { js ->
-                    evaluateJavascript(js, null)
-                }
+                gestureHandler.handleTouch(
+                    event,
+                    params!!,
+                    windowManager!!,
+                    this
+                ) { js -> evaluateJavascript(js, null) }
             }
         }
 
@@ -175,9 +186,8 @@ class OverlayService : Service() {
     private fun startCommandPolling() {
         supabaseSync.pollForCommands { command ->
             mainHandler.post {
-                val escaped = command.replace("'", "\\'")
                 overlayView?.evaluateJavascript(
-                    "window.petEngine && window.petEngine.onAICommand('$escaped')", null
+                    "window.petEngine && window.petEngine.onAICommand('$command')", null
                 )
             }
         }
@@ -191,13 +201,18 @@ class OverlayService : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                CHANNEL_ID, "深空云体", NotificationManager.IMPORTANCE_LOW
+                CHANNEL_ID,
+                "深空云体",
+                NotificationManager.IMPORTANCE_LOW
             ).apply { setShowBadge(false) }
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+            getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(channel)
         }
     }
 
-    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
+    }
 
     override fun onDestroy() {
         serviceScope.cancel()
