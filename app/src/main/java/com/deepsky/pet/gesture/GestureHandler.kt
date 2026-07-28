@@ -1,7 +1,7 @@
 package com.deepsky.pet.gesture
 
 import android.view.MotionEvent
-import android.view.WebView
+import android.webkit.WebView
 import android.view.WindowManager
 
 class GestureHandler(
