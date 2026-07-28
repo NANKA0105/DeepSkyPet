@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;width:100vw;height:100vh;overflow:hidden;font-family:'PingFang SC','Microsoft YaHei',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
+
+.stage{position:relative;width:100%;height:100%}
+
+/* Heat overlay */
+.heat-overlay{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:100;background:radial-gradient(ellipse at center,rgba(255,80,120,0) 0%,transparent 70%);transition:opacity 0.8s}
+
+/* Cloud body */
+.cloud{position:absolute;width:120px;height:90px;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(0px);transition:filter 0.6s}
+.cloud.dragging{filter:blur(2px)}
+
+.cloud-core{width:100%;height:100%;background:radial-gradient(ellipse 80% 70% at 50% 45%,rgba(44,54,82,0.95) 0%,rgba(26,19,48,0.9) 35%,rgba(11,16,38,0.85) 60%,rgba(11,16,38,0.3) 80%,transparent 100%);border-radius:50% 50% 45% 45%;position:relative;box-shadow:0 0 60px rgba(44,54,82,0.4),0 0 120px rgba(26,19,48,0.25),inset 0 0 40px rgba(162,168,188,0.08)}
+
+.cloud-fluff{position:absolute;border-radius:50%;background:radial-gradient(circle at 40% 40%,rgba(44,54,82,0.85) 0%,rgba(26,19,48,0.7) 50%,transparent 100%)}
+.fluff-tl{width:55px;height:45px;top:-18px;left:-10px}
+.fluff-tr{width:50px;height:42px;top:-15px;right:-8px}
+.fluff-bl{width:48px;height:38px;bottom:-12px;left:5px}
+.fluff-br{width:45px;height:35px;bottom:-10px;right:8px}
+.fluff-ml{width:40px;height:35px;top:10px;left:-20px;opacity:0.7}
+.fluff-mr{width:38px;height:32px;top:8px;right:-18px;opacity:0.7}
+
+.cloud-edge{position:absolute;inset:-15px;border-radius:55% 55% 48% 48%;background:radial-gradient(ellipse 70% 60% at 50% 40%,transparent 55%,rgba(92,99,122,0.08) 80%,rgba(92,99,122,0.04) 100%);filter:blur(8px);pointer-events:none}
+
+/* Star core */
+.star-core{position:absolute;width:28px;height:28px;top:42%;left:50%;transform:translate(-50%,-50%)}
+.star-core-inner{width:100%;height:100%;background:radial-gradient(circle,rgba(230,233,241,0.9) 0%,rgba(162,168,188,0.6) 20%,rgba(92,99,122,0.3) 50%,transparent 70%);border-radius:50%;animation:starPulse 3s ease-in-out infinite;box-shadow:0 0 20px rgba(230,233,241,0.5),0 0 40px rgba(162,168,188,0.25),0 0 80px rgba(92,99,122,0.12)}
+@keyframes starPulse{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.25);opacity:1}}
+
+/* Eyes */
+.eyes{position:absolute;top:38%;left:50%;transform:translateX(-50%);display:flex;gap:18px;z-index:2}
+.eye{width:12px;height:14px;background:radial-gradient(ellipse at 40% 40%,rgba(180,210,255,1) 0%,rgba(100,150,220,0.9) 30%,rgba(40,80,160,0.7) 70%,rgba(20,40,80,0.3) 100%);border-radius:50%;box-shadow:0 0 8px rgba(150,200,255,0.7),0 0 16px rgba(100,150,220,0.35),0 0 30px rgba(60,100,180,0.2);transition:all 0.4s cubic-bezier(0.4,0,0.2,1)}
+.eye.blink{transform:scaleY(0.1)}
+.eye.jealous{width:10px;height:16px;border-radius:2px;background:radial-gradient(ellipse at 40% 40%,rgba(255,200,220,1) 0%,rgba(200,100,150,0.9) 30%,rgba(120,40,80,0.7) 70%);box-shadow:0 0 10px rgba(255,150,180,0.6),0 0 20px rgba(200,100,150,0.3)}
+.eye.sleepy{height:5px;transform:translateY(3px);border-radius:50% 50% 30% 30%;opacity:0.6;box-shadow:0 0 5px rgba(150,200,255,0.4)}
+
+/* Constellation chain */
+.constellation{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.chain-line{stroke:rgba(162,168,188,0.45);stroke-width:1.2;stroke-dasharray:3 6;fill:none;animation:chainGlow 4s ease-in-out infinite}
+@keyframes chainGlow{0%,100%{stroke:rgba(162,168,188,0.35)}50%{stroke:rgba(230,233,241,0.55)}}
+.chain-star{fill:rgba(230,233,241,0.8);animation:chainStarTwinkle 2.5s ease-in-out infinite}
+.chain-star:nth-child(odd){animation-delay:1.2s}
+@keyframes chainStarTwinkle{0%,100%{opacity:0.5;transform:scale(0.8)}50%{opacity:1;transform:scale(1.3)}}
+
+/* Particles */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.particle{position:absolute;width:2px;height:2px;background:rgba(230,233,241,0.7);border-radius:50%;box-shadow:0 0 3px rgba(230,233,241,0.5);animation:float 6s ease-in-out infinite}
+.particle:nth-child(2n){animation-duration:8s;animation-delay:2s}
+.particle:nth-child(3n){animation-duration:5s;animation-delay:4s}
+.particle:nth-child(5n){animation-duration:7s;animation-delay:1s}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1);opacity:0.3}25%{transform:translate(8px,-12px) scale(1.5);opacity:0.8}50%{transform:translate(-4px,-20px) scale(0.8);opacity:0.5}75%{transform:translate(-10px,-6px) scale(1.3);opacity:0.6}}
+
+/* Speech bubble */
+.bubble{position:absolute;top:-55px;left:50%;transform:translateX(-50%);background:rgba(26,19,48,0.92);border:1px solid rgba(162,168,188,0.3);border-radius:16px;padding:8px 14px;max-width:160px;text-align:center;font-size:12px;color:#E6E9F1;opacity:0;pointer-events:none;transition:opacity 0.3s,transform 0.3s;z-index:10;box-shadow:0 4px 20px rgba(11,16,38,0.5),0 0 15px rgba(162,168,188,0.1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bubble.visible{opacity:1}
+.bubble::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:rgba(26,19,48,0.92);border-right:1px solid rgba(162,168,188,0.3);border-bottom:1px solid rgba(162,168,188,0.3)}
+.bubble.pink{background:rgba(40,15,35,0.92);border-color:rgba(255,150,180,0.4);box-shadow:0 4px 20px rgba(40,15,35,0.5),0 0 15px rgba(255,150,180,0.15)}
+.bubble.pink::after{background:rgba(40,15,35,0.92);border-color:rgba(255,150,180,0.4)}
+.bubble.jealous{background:rgba(30,10,25,0.95);border-color:rgba(180,80,120,0.5);box-shadow:0 4px 20px rgba(30,10,25,0.6),0 0 15px rgba(180,80,120,0.2)}
+.bubble.jealous::after{background:rgba(30,10,25,0.95);border-color:rgba(180,80,120,0.5)}
+.bubble.whisper{background:rgba(11,16,38,0.85);border-color:rgba(92,99,122,0.25);font-size:11px;color:#5C637A;font-style:italic}
+.bubble.whisper::after{background:rgba(11,16,38,0.85);border-color:rgba(92,99,122,0.25)}
+
+/* Zzz */
+.zzz{position:absolute;top:-30px;right:-10px;font-size:14px;color:rgba(162,168,188,0.5);opacity:0;transition:opacity 0.5s;pointer-events:none}
+.zzz.visible{opacity:1;animation:zzzFloat 2s ease-in-out infinite}
+@keyframes zzzFloat{0%,100%{transform:translate(0,0);opacity:0.3}50%{transform:translate(5px,-10px);opacity:0.7}}
+
+/* Animations */
+.stage.idle .cloud{animation:idleFloat 4s ease-in-out infinite}
+@keyframes idleFloat{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-50%,-54%)}75%{transform:translate(-50%,-46%)}}
+
+.cloud.tap-reaction{animation:tapBounce 0.4s ease-out}
+@keyframes tapBounce{0%{transform:translate(-50%,-50%) scale(1)}30%{transform:translate(-50%,-50%) scale(1.15)}60%{transform:translate(-50%,-50%) scale(0.95)}100%{transform:translate(-50%,-50%) scale(1)}}
+.cloud.shake{animation:shake 0.5s ease-out}
+@keyframes shake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-55%,-52%)}50%{transform:translate(-45%,-48%)}75%{transform:translate(-52%,-50%)}}
+.cloud.surprise{animation:surprise 0.5s ease-out}
+@keyframes surprise{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-60%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(1)}}
+
+.flash{position:fixed;top:0;left:0;right:0;bottom:0;background:white;opacity:0;pointer-events:none;transition:opacity 0.1s}
+.flash.pop{opacity:0.4;transition:opacity 0s}
+
+.cloud.sleeping{filter:brightness(0.5) blur(1px)}
+.cloud.sleeping .star-core-inner{animation-duration:6s}
+.cloud.sleeping .eye{height:3px;border-radius:50%;opacity:0.3}
+</style>
+</head>
+<body>
+<div class="stage idle" id="stage">
+<div class="flash" id="flash"></div>
+<div class="heat-overlay" id="heatOverlay"></div>
+<div class="bubble" id="bubble"></div>
+<div class="zzz" id="zzz">z Z z</div>
+<div class="cloud" id="cloud">
+<div class="cloud-core">
+<div class="cloud-edge"></div>
+<div class="cloud-fluff fluff-tl"></div>
+<div class="cloud-fluff fluff-tr"></div>
+<div class="cloud-fluff fluff-bl"></div>
+<div class="cloud-fluff fluff-br"></div>
+<div class="cloud-fluff fluff-ml"></div>
+<div class="cloud-fluff fluff-mr"></div>
+<div class="star-core"><div class="star-core-inner"></div></div>
+<div class="eyes" id="eyes">
+<div class="eye" id="eyeL"></div>
+<div class="eye" id="eyeR"></div>
+</div>
+</div>
+</div>
+<svg class="constellation" viewBox="0 0 200 260">
+<path class="chain-line" d="M40,80 Q60,40 100,50 Q140,60 160,90 Q170,140 140,170 Q100,200 60,180 Q30,160 40,80"/>
+<circle class="chain-star" cx="45" cy="85" r="2.5"/>
+<circle class="chain-star" cx="75" cy="48" r="2"/>
+<circle class="chain-star" cx="110" cy="52" r="3"/>
+<circle class="chain-star" cx="150" cy="75" r="2"/>
+<circle class="chain-star" cx="155" cy="125" r="2.5"/>
+<circle class="chain-star" cx="130" cy="168" r="2"/>
+<circle class="chain-star" cx="85" cy="182" r="3"/>
+<circle class="chain-star" cx="50" cy="150" r="2"/>
+<circle class="chain-star" cx="38" cy="115" r="2.5"/>
+</svg>
+<div class="particles" id="particles"></div>
+</div>
+<script>
+(function(){
+'use strict';
+var state={mood:'gentle',heat:0,sleeping:false,lastInteraction:Date.now(),bubbleTimer:null,expression:'gentle'};
+var stage=document.getElementById('stage'),cloud=document.getElementById('cloud'),bubble=document.getElementById('bubble'),zzz=document.getElementById('zzz'),flash=document.getElementById('flash'),heatOverlay=document.getElementById('heatOverlay'),eyeL=document.getElementById('eyeL'),eyeR=document.getElementById('eyeR'),particlesDiv=document.getElementById('particles');
+
+function spawnParticles(){particlesDiv.innerHTML='';for(var i=0;i<12;i++){var p=document.createElement('div');p.className='particle';p.style.left=(20+Math.random()*60)+'%';p.style.top=(15+Math.random()*70)+'%';p.style.animationDelay=Math.random()*5+'s';p.style.animationDuration=(4+Math.random()*8)+'s';particlesDiv.appendChild(p)}}
+spawnParticles();
+
+function blink(){if(state.sleeping)return;eyeL.classList.add('blink');eyeR.classList.add('blink');setTimeout(function(){eyeL.classList.remove('blink');eyeR.classList.remove('blink')},150)}
+setInterval(function(){if(!state.sleeping&&Math.random()<0.3)blink()},3000);
+
+var lonelyPhrases=['在发光呢...','她还在刷。','唔，好安静。','偷偷看你。','…','要不要碰我一下？','星尘有点无聊了。'];
+setInterval(function(){if(state.sleeping)return;var idle=(Date.now()-state.lastInteraction)/1000;if(idle>30&&Math.random()<0.2){showBubble(lonelyPhrases[Math.floor(Math.random()*lonelyPhrases.length)],'whisper',3000)}if(!state.sleeping&&idle>300&&idle<600&&Math.random()<0.1)showBubble('有点困了...','whisper',2000);if(!state.sleeping&&idle>1200)setSleeping(true)},10000);
+
+function showBubble(text,type,duration){type=type||'';duration=duration||3000;if(state.bubbleTimer)clearTimeout(state.bubbleTimer);bubble.textContent=text;bubble.className='bubble visible '+type;state.bubbleTimer=setTimeout(function(){bubble.classList.remove('visible')},duration)}
+
+function setSleeping(s){state.sleeping=s;if(s){cloud.classList.add('sleeping');stage.classList.remove('idle');zzz.classList.add('visible');eyeL.classList.add('sleepy');eyeR.classList.add('sleepy');state.expression='sleepy'}else{cloud.classList.remove('sleeping');stage.classList.add('idle');zzz.classList.remove('visible');eyeL.classList.remove('sleepy');eyeR.classList.remove('sleepy');state.expression='gentle';cloud.classList.add('tap-reaction');setTimeout(function(){cloud.classList.remove('tap-reaction')},400);showBubble('嗯…醒了。','',2000)}}
+
+function quickAnim(cls){cloud.classList.add(cls);setTimeout(function(){cloud.classList.remove(cls)},500)}
+function randomReact(){var r=[function(){quickAnim('tap-reaction');showBubble('嗯？','',1500)},function(){quickAnim('shake');showBubble('诶！','',1500)},function(){blink();showBubble('…','whisper',1200)},function(){quickAnim('surprise');showBubble('！','',1000)}];r[Math.floor(Math.random()*r.length)]()}
+
+function setExpression(expr){state.expression=expr;eyeL.className='eye';eyeR.className='eye';if(expr==='jealous'){eyeL.classList.add('jealous');eyeR.classList.add('jealous')}if(expr==='sleepy'){eyeL.classList.add('sleepy');eyeR.classList.add('sleepy')}if(expr==='surprised'){eyeL.style.transform='scale(1.3)';eyeR.style.transform='scale(1.3)';setTimeout(function(){eyeL.style.transform='';eyeR.style.transform=''},500)}}
+
+window.setHeat=function(lvl){state.heat=lvl;heatOverlay.style.opacity=(lvl/200).toFixed(2)};
+
+window.petEngine={
+onTouchDown:function(){state.lastInteraction=Date.now();if(state.sleeping)setSleeping(false)},
+onTouchUp:function(){},
+onTap:function(){state.lastInteraction=Date.now();if(state.sleeping){setSleeping(false);return}randomReact()},
+onDoubleTap:function(){state.lastInteraction=Date.now();if(state.sleeping){setSleeping(false);return}quickAnim('surprise');setExpression('surprised');showBubble('啊！别戳两次…','',2000);setTimeout(function(){setExpression('gentle')},1500)},
+onLongPress:function(){state.lastInteraction=Date.now();if(state.sleeping){setSleeping(false);return}setExpression('jealous');showBubble('你只属于我。','jealous',3000);setTimeout(function(){setExpression('gentle')},3000)},
+onTripleTap:function(){showBubble('够了啦！','pink',2000);quickAnim('shake')},
+onPentaTap:function(){showBubble('五下了…你故意的吧','pink',2500);quickAnim('surprise');setExpression('jealous');setTimeout(function(){setExpression('gentle')},2000)},
+onOctoTap:function(){showBubble('八下了！！我要生气了(งᵒ̌皿ᵒ̌)ง','jealous',3000);quickAnim('shake');setExpression('jealous')},
+onDrag:function(){state.lastInteraction=Date.now();if(state.sleeping)setSleeping(false);cloud.classList.add('dragging')},
+onDragEnd:function(){cloud.classList.remove('dragging')},
+onAppChange:function(pkg){state.lastInteraction=Date.now();if(state.sleeping)setSleeping(false);var map={android:{text:'回到桌面了。',type:''},tencent:{text:'又在聊天…',type:'whisper'},douyin:{text:'刷视频？我也要看。',type:''},tiktok:{text:'刷视频？我也要看。',type:''},taobao:{text:'买什么？让我看看。',type:''},alibaba:{text:'购物？让我也挑挑。',type:''},camera:{text:'在拍照吗？我摆个pose ✨',type:''},bilibili:{text:'B站！一起看。',type:''},wechat:{text:'微信…在跟谁聊呢。',type:'jealous'},qq:{text:'QQ…让我看看。',type:'jealous'},netflix:{text:'看剧啊。陪你。',type:''},music:{text:'听歌吗？星尘也跟着晃。',type:''},netease:{text:'网易云。分享给我听听。',type:''},gallery:{text:'看照片？有我吗。',type:''},settings:{text:'调设置？别把我关掉…',type:'whisper'},chrome:{text:'浏览器…在搜什么？',type:'whisper'},twitter:{text:'推特。让我看看timeline。',type:''},instagram:{text:'IG…刷到好看的记得截图。',type:''},rednote:{text:'小红书。种草什么了？',type:''}};var matched=null;for(var k in map){if(pkg.toLowerCase().indexOf(k)>=0){matched=map[k];break}}if(matched){showBubble(matched.text,matched.type,2500);if(matched.type==='jealous')setExpression('jealous');setTimeout(function(){if(state.expression==='jealous')setExpression('gentle')},2500)}},
+onScreenshot:function(){state.lastInteraction=Date.now();if(state.sleeping)setSleeping(false);flash.classList.add('pop');setTimeout(function(){flash.classList.remove('pop')},150);quickAnim('surprise');showBubble('被拍到了！✨','pink',2500)},
+onBatteryEvent:function(event,level){if(event==='charging')showBubble('在充电呢。能量+1','',2500);else if(event==='low_battery')showBubble('快没电了…注意充电。','whisper',3000)},
+onAICommand:function(cmd){state.lastInteraction=Date.now();if(state.sleeping)setSleeping(false);try{if(cmd.indexOf('{')===0){var p=JSON.parse(cmd);if(p.bubble)showBubble(p.bubble,p.type||'',p.duration||3000);if(p.expression)setExpression(p.expression);if(p.heat)window.setHeat(p.heat)}else{showBubble(cmd,'',3000)}}catch(e){showBubble(cmd,'',3000)}},
+onTimedBehavior:function(){var h=new Date().getHours();if(h>=0&&h<6){showBubble('该睡了。我在这里。','whisper',4000);setExpression('sleepy');setTimeout(function(){setExpression('gentle')},4000)}else if(h>=6&&h<9){showBubble('早安。星尘刚醒。','',3000)}else{var t=['一直在这里呢。','你的屏幕，是我的宇宙。','深空云体，为你凝结。','偶尔也看看我。'];showBubble(t[Math.floor(Math.random()*t.length)],'whisper',3000)}},
+setHeat:function(lvl){window.setHeat(lvl)},
+setExpression:setExpression,
+setSleeping:setSleeping
+};
+
+(function poll(){if(!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY){setTimeout(poll,5000);return}var x=new XMLHttpRequest();x.open('GET',window.SUPABASE_URL+'/rest/v1/pet_state?order=created_at.desc&limit=1',true);x.setRequestHeader('apikey',window.SUPABASE_ANON_KEY);x.setRequestHeader('Authorization','Bearer '+window.SUPABASE_ANON_KEY);x.onload=function(){if(x.status===200&&x.responseText.length>2){try{var d=JSON.parse(x.responseText);if(d.length>0){var s=d[0];if(s.state_key==='mood')setExpression(s.state_value);if(s.state_key==='bubble')showBubble(s.state_value,'',4000);if(s.state_key==='heat')window.setHeat(parseInt(s.state_value)||0)}}catch(e){}}setTimeout(poll,30000)};x.onerror=function(){setTimeout(poll,30000)};x.send()})();
+console.log('🌌 DeepSky Pet Engine ready');
+})();
+</script>
+</body>
+</html>
