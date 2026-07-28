@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -18,21 +18,15 @@ jobs:
 
       - name: Setup Android SDK
         run: |
-          export ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          # Find sdkmanager
-          SDKMGR=$(find $ANDROID_HOME -name sdkmanager -type f 2>/dev/null | head -1)
-          echo "Found sdkmanager: $SDKMGR"
-          # Accept licenses
-          yes | $SDKMGR --sdk_root=$ANDROID_HOME --licenses 2>&1 || true
-          # List installed
-          $SDKMGR --sdk_root=$ANDROID_HOME --list 2>&1 | grep -E "platforms|build-tools" || true
-          # Install API 34
-          $SDKMGR --sdk_root=$ANDROID_HOME "platforms;android-34" "build-tools;34.0.0" 2>&1
-          # Verify
-          ls -la $ANDROID_HOME/platforms/android-34/ || echo "SDK 34 NOT FOUND"
+          ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          # Accept licenses & install SDK 34
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
+          echo "--- Installed SDKs ---"
+          ls $ANDROID_SDK_ROOT/platforms/
 
       - name: Setup Gradle 8.5
         run: |
@@ -42,7 +36,7 @@ jobs:
           $PWD/gradle-8.5/bin/gradle --version
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace --info 2>&1 | tail -200
+        run: gradle assembleDebug --stacktrace
 
       - uses: actions/upload-artifact@v4
         if: always()
