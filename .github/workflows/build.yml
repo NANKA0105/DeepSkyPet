@@ -17,15 +17,25 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install Android SDK 34
+      - name: Setup Android SDK & Gradle Wrapper
         run: |
-          yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
-
-      - name: Download Gradle & Generate Wrapper
-        run: |
+          # Android SDK path
+          ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          
+          # Find and run sdkmanager to install API 34
+          SDKMANAGER=$(find $ANDROID_HOME -name "sdkmanager" -type f 2>/dev/null | head -1)
+          echo "SDKMANAGER=$SDKMANAGER"
+          if [ -n "$SDKMANAGER" ]; then
+            yes | $SDKMANAGER --sdk_root=$ANDROID_HOME "platforms;android-34" "build-tools;34.0.0"
+          fi
+          
+          # Download Gradle and generate wrapper (as original repo expects)
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
           ./gradle-8.5/bin/gradle wrapper --gradle-version 8.5
+          chmod +x gradlew
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
