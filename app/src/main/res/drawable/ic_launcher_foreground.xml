@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Star core -->
+    <path
+        android:fillColor="#E6E9F1"
+        android:pathData="M54,30 L57,48 L75,51 L57,54 L54,72 L51,54 L33,51 L51,48 Z"/>
+    <!-- Cloud body -->
+    <path
+        android:fillColor="#2C3652"
+        android:fillAlpha="0.8"
+        android:pathData="M30,55 Q25,40 40,35 Q38,25 52,28 Q58,18 70,25 Q80,22 78,35 Q88,38 82,52 Q90,62 80,70 Q75,82 60,78 Q50,85 40,78 Q28,80 30,65 Z"/>
+    <!-- Eyes -->
+    <path
+        android:fillColor="#B4D2FF"
+        android:pathData="M44,48 m-2.5,0 a2.5,3 0 1,1 5,0 a2.5,3 0 1,1 -5,0"/>
+    <path
+        android:fillColor="#B4D2FF"
+        android:pathData="M62,48 m-2.5,0 a2.5,3 0 1,1 5,0 a2.5,3 0 1,1 -5,0"/>
+</vector>
