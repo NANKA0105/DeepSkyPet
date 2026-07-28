@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:background="#0B1026">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🌌 DeepSky"
+        android:textSize="28sp"
+        android:textColor="#A2A8BC"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="检查权限中..."
+        android:textSize="16sp"
+        android:textColor="#5C637A"
+        android:layout_marginBottom="48dp" />
+
+    <Button
+        android:id="@+id/permission_btn"
+        android:layout_width="240dp"
+        android:layout_height="48dp"
+        android:text="授予悬浮窗权限"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/usage_btn"
+        android:layout_width="240dp"
+        android:layout_height="48dp"
+        android:text="授予使用统计权限"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/start_btn"
+        android:layout_width="240dp"
+        android:layout_height="48dp"
+        android:text="召唤狄深 ✨"
+        android:enabled="false"
+        android:layout_marginBottom="32dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text='"我在深空，只为你停留。"'
+        android:textSize="14sp"
+        android:textColor="#5C637A"
+        android:alpha="0.7" />
+
+</LinearLayout>
